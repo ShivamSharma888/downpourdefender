@@ -3,3 +3,6 @@ pandas
 scikit-learn
 pyserial
 numpy
+plotly.express
+plotly
+express
