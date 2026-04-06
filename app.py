@@ -16,13 +16,16 @@ st.set_page_config(page_title="Downpour Defender 🌧", layout="wide")
 # -----------------------------
 st.markdown("""
 <style>
+
 .card {
     background: white;
+    color: black;   /* ✅ ADD THIS */
     padding: 15px;
     border-radius: 15px;
     box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
 }
-</style>
+
+
 """, unsafe_allow_html=True)
 
 # -----------------------------
