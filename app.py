@@ -346,14 +346,11 @@ st.pydeck_chart(pdk.Deck(
     ]
 ))
     st.subheader(f"📍 {loc}")
-
     c1,c2,c3,c4 = st.columns(4)
-
     c1.markdown(f'<div class="card">🌧 Rain<br><b>{rain:.1f}</b></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="card">🌡 Temp<br><b>{temp:.1f}</b></div>', unsafe_allow_html=True)
     c3.markdown(f'<div class="card">💨 Wind<br><b>{wind:.1f}</b></div>', unsafe_allow_html=True)
     c4.markdown(f'<div class="card">⚠ Risk<br><b>{"HIGH" if pred else "LOW"}</b></div>', unsafe_allow_html=True)
-
     # GAUGE
     fig = go.Figure(go.Indicator(
     mode="gauge+number",
