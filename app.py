@@ -501,19 +501,17 @@ if prompt := st.chat_input("Ask anything..."):
 
     with st.chat_message("assistant"):
         st.write(reply)
-
-# -----------------------------
-# FOOTER
-# -----------------------------
 st.markdown("""
 <style>
 .footer {
     position: fixed;
-    bottom: 10px;
+    bottom: 0;
+    left: 0;
     width: 100%;
     text-align: center;
     font-size: 16px;
     color: white;
+    z-index: 9999;  /* 🔥 important */
 }
 
 .footer span {
