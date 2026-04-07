@@ -219,13 +219,25 @@ for loc in selected:
     ))
 
     # TELEGRAM TIMER
-    if "last_sent" not in st.session_state:
-        st.session_state.last_sent = 0
+   if "last_sent" not in st.session_state:
+    st.session_state.last_sent = 0
 
-    if time.time() - st.session_state.last_sent > 1800:
-        send_telegram(f"{loc} Rain:{rain:.1f}")
-        st.session_state.last_sent = time.time()
+# Check cooldown (30 minutes = 1800 seconds)
+if time.time() - st.session_state.last_sent > 1800:
+    
+    # Define risk
+    if rain > 80:
+        risk = "HIGH"
+    elif rain > 40:
+        risk = "MODERATE"
+    else:
+        risk = "LOW"
 
+    # Send only risk
+    send_telegram(f"⚠ {loc} Cloudburst Risk: {risk}")
+
+    # Update last sent time
+    st.session_state.last_sent = time.time()
 # -----------------------------
 # CHATBOT
 # -----------------------------
@@ -495,4 +507,4 @@ if prompt := st.chat_input("Ask anything..."):
 # FOOTER
 # -----------------------------
 st.markdown("---")
-st.write("🚀 PRO MAX FINAL VERSION")
+st.write("DEVELOPED BY ANSH THAKUR ,PIYUSH SHARMA and HEMANT KUMAR")
