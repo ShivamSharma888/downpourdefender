@@ -187,7 +187,80 @@ for loc in selected:
     })
 
     pred, prob = predict(df)
+    # -----------------------------
+# ROUTE & RISK MAP
+# -----------------------------
+# Example: Start = user's location, End = destination (you can allow user input for destination)
+start_coord = (lat, lon)
+end_coord = (31.10, 77.17)  # Example: Shimla (replace with dynamic user choice)
 
+# Simulate intermediate points along route
+route_coords = [
+    start_coord,
+    ((start_coord[0]+end_coord[0])/2, (start_coord[1]+end_coord[1])/2),  # midpoint
+    end_coord
+]
+
+# Calculate rainfall probability along the path
+route_probs = []
+for rlat, rlon in route_coords:
+    rain, temp, wind = get_weather(rlat, rlon)
+    df = pd.DataFrame({"rainfall":[rain], "temperature":[temp], "windspeed":[wind]})
+    _, prob = predict(df)
+    route_probs.append(prob)
+
+# Convert probability to color
+def risk_color(prob):
+    if prob < 0.4:
+        return [0, 200, 0]   # Green = Safe
+    elif prob < 0.7:
+        return [255, 200, 0] # Yellow = Moderate
+    else:
+        return [255, 0, 0]   # Red = High
+
+# Create PyDeck path data
+import pandas as pd
+path_data = []
+for i in range(len(route_coords)-1):
+    path_data.append({
+        "path": [route_coords[i], route_coords[i+1]],
+        "color": risk_color(route_probs[i])
+    })
+
+df_path = pd.DataFrame(path_data)
+
+# Display map
+st.pydeck_chart(pdk.Deck(
+    initial_view_state=pdk.ViewState(
+        latitude=start_coord[0],
+        longitude=start_coord[1],
+        zoom=10
+    ),
+    layers=[
+        pdk.Layer(
+            "PathLayer",
+            data=df_path,
+            get_path="path",
+            get_color="color",
+            width_scale=20,
+            width_min_pixels=5
+        ),
+        pdk.Layer(
+            "ScatterplotLayer",
+            data=pd.DataFrame([{"lat": start_coord[0], "lon": start_coord[1]}]),
+            get_position=["lon","lat"],
+            get_fill_color=[0,0,255],
+            get_radius=500
+        ),
+        pdk.Layer(
+            "ScatterplotLayer",
+            data=pd.DataFrame([{"lat": end_coord[0], "lon": end_coord[1]}]),
+            get_position=["lon","lat"],
+            get_fill_color=[255,255,255],
+            get_radius=500
+        )
+    ]
+))
     st.subheader(f"📍 {loc}")
 
     c1,c2,c3,c4 = st.columns(4)
