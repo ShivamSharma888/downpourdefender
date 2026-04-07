@@ -49,7 +49,7 @@ def send_telegram(msg):
 # -----------------------------
 # MODEL
 # -----------------------------
- class DummyModel:
+class DummyModel:
     def predict(self, df):
         return [1 if df['rainfall'].iloc[0] > 80 else 0]
 
