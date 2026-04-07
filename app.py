@@ -175,6 +175,7 @@ st.title("🌧 Downpour Defender PRO MAX")
 # DASHBOARD
 # -----------------------------
 for loc in selected:
+    # 1. DATA PREPARATION
     lat, lon = st.session_state.locs[loc]
     rain, temp, wind = get_weather(lat, lon)
     df = pd.DataFrame({
@@ -184,42 +185,30 @@ for loc in selected:
     })
     pred, prob = predict(df)
 
-    # --- LOCATION HEADER ---
+    # 2. UI HEADER
     st.subheader(f"📍 {loc}")
 
-    # --- ROUTE & RISK MAP (FIXED INDENTATION) ---
+    # 3. ROUTE & RISK MAP (Dynamic path from location to Shimla)
     start_coord = (lat, lon)
     end_coord = (31.10, 77.17)  # Shimla
     
-    # Calculate route points
     route_coords = [
         start_coord,
         ((start_coord[0]+end_coord[0])/2, (start_coord[1]+end_coord[1])/2),
         end_coord
     ]
 
-    # Calculate rainfall probability along the path
-    route_probs = []
-    for rlat, rlon in route_coords:
-        r_rain, r_temp, r_wind = get_weather(rlat, rlon)
-        r_df = pd.DataFrame({"rainfall":[r_rain], "temperature":[r_temp], "windspeed":[r_wind]})
-        _, r_prob = predict(r_df)
-        route_probs.append(r_prob)
-
-    # Convert probability to color
-    def risk_color(p):
-        if p < 0.4: return [0, 200, 0]   # Green
-        if p < 0.7: return [255, 200, 0] # Yellow
-        return [255, 0, 0]              # Red
-
     path_data = []
     for i in range(len(route_coords)-1):
+        # We check weather for each segment
+        s_rain, _, _ = get_weather(route_coords[i][0], route_coords[i][1])
+        s_color = [255, 0, 0] if s_rain > 40 else [0, 200, 0] # Red if segment is rainy
+        
         path_data.append({
-            "path": [route_coords[i][::-1], route_coords[i+1][::-1]], # PyDeck uses [lon, lat]
-            "color": risk_color(route_probs[i])
+            "path": [route_coords[i][::-1], route_coords[i+1][::-1]], 
+            "color": s_color
         })
 
-    # Display Map
     st.pydeck_chart(pdk.Deck(
         initial_view_state=pdk.ViewState(latitude=lat, longitude=lon, zoom=9),
         layers=[
@@ -228,188 +217,47 @@ for loc in selected:
                 data=pd.DataFrame(path_data),
                 get_path="path",
                 get_color="color",
-                width_scale=20,
-                width_min_pixels=5
+                width_min_pixels=5,
             )
         ]
     ))
-    # --- METRICS ---
-    c1,c2,c3,c4 = st.columns(4)
-    c1.markdown(f'<div class="card">🌧 Rain<br><b>{rain:.1f}</b></div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="card">🌡 Temp<br><b>{temp:.1f}</b></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="card">💨 Wind<br><b>{wind:.1f}</b></div>', unsafe_allow_html=True)
+
+    # 4. METRICS CARDS
+    c1, c2, c3, c4 = st.columns(4)
+    c1.markdown(f'<div class="card">🌧 Rain<br><b>{rain:.1f} mm</b></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="card">🌡 Temp<br><b>{temp:.1f}°C</b></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="card">💨 Wind<br><b>{wind:.1f} km/h</b></div>', unsafe_allow_html=True)
     c4.markdown(f'<div class="card">⚠ Risk<br><b>{"HIGH" if pred else "LOW"}</b></div>', unsafe_allow_html=True)
 
-    # --- GAUGE & WARNINGS ---
+    # 5. RISK GAUGE
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=min(prob * 100, 95),
-        title={'text': "Cloudburst Probability %"},
+        title={'text': "Cloudburst Prob %"},
         gauge={'axis': {'range': [0, 100]}}
     ))
     st.plotly_chart(fig, key=f"chart_{loc}")
 
+    # 6. LANDSLIDE LOGIC
     if rain > 80:
-        st.error("🚨 HIGH LANDSLIDE RISK")
+        st.error("🚨 HIGH LANDSLIDE RISK - Travel Discouraged")
     elif rain > 40:
-        st.warning("⚠ Moderate Risk")
+        st.warning("⚠ Moderate Risk - Be Cautious")
     else:
         st.success("✅ Safe Travel Conditions")
-    # --- REST OF YOUR DASHBOARD (Gauge, Landslide Check, etc.) ---
-    # Ensure all code below is indented under the 'for loc in selected' loop
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=min(prob * 100, 95),
-        title={'text': "Cloudburst Probability %"},
-        gauge={'axis': {'range': [0, 100]}}
-    ))
-    st.plotly_chart(fig, key=f"chart_{loc}")
 
-    if rain > 80:
-        st.error("🚨 HIGH LANDSLIDE RISK")
-    elif rain > 40:
-        st.warning("⚠ Moderate Risk")
-    else:
-        st.success("✅ Safe Travel")
-# ... (The rest of your script)
-# ROUTE & RISK MAP
-# -----------------------------
-# Example: Start = user's location, End = destination (you can allow user input for destination)
-start_coord = (lat, lon)
-end_coord = (31.10, 77.17)  # Example: Shimla (replace with dynamic user choice)
-
-# Simulate intermediate points along route
-route_coords = [
-    start_coord,
-    ((start_coord[0]+end_coord[0])/2, (start_coord[1]+end_coord[1])/2),  # midpoint
-    end_coord
-]
-
-# Calculate rainfall probability along the path
-route_probs = []
-for rlat, rlon in route_coords:
-    rain, temp, wind = get_weather(rlat, rlon)
-    df = pd.DataFrame({"rainfall":[rain], "temperature":[temp], "windspeed":[wind]})
-    _, prob = predict(df)
-    route_probs.append(prob)
-
-# Convert probability to color
-def risk_color(prob):
-    if prob < 0.4:
-        return [0, 200, 0]   # Green = Safe
-    elif prob < 0.7:
-        return [255, 200, 0] # Yellow = Moderate
-    else:
-        return [255, 0, 0]   # Red = High
-
-# Create PyDeck path data
-import pandas as pd
-path_data = []
-for i in range(len(route_coords)-1):
-    path_data.append({
-        "path": [route_coords[i], route_coords[i+1]],
-        "color": risk_color(route_probs[i])
-    })
-
-df_path = pd.DataFrame(path_data)
-
-# Display map
-st.pydeck_chart(pdk.Deck(
-    initial_view_state=pdk.ViewState(
-        latitude=start_coord[0],
-        longitude=start_coord[1],
-        zoom=10
-    ),
-    layers=[
-        pdk.Layer(
-            "PathLayer",
-            data=df_path,
-            get_path="path",
-            get_color="color",
-            width_scale=20,
-            width_min_pixels=5
-        ),
-        pdk.Layer(
-            "ScatterplotLayer",
-            data=pd.DataFrame([{"lat": start_coord[0], "lon": start_coord[1]}]),
-            get_position=["lon","lat"],
-            get_fill_color=[0,0,255],
-            get_radius=500
-        ),
-        pdk.Layer(
-            "ScatterplotLayer",
-            data=pd.DataFrame([{"lat": end_coord[0], "lon": end_coord[1]}]),
-            get_position=["lon","lat"],
-            get_fill_color=[255,255,255],
-            get_radius=500
-        )
-    ]
-))
-    st.subheader(f"📍 {loc}")
-    c1,c2,c3,c4 = st.columns(4)
-    c1.markdown(f'<div class="card">🌧 Rain<br><b>{rain:.1f}</b></div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="card">🌡 Temp<br><b>{temp:.1f}</b></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="card">💨 Wind<br><b>{wind:.1f}</b></div>', unsafe_allow_html=True)
-    c4.markdown(f'<div class="card">⚠ Risk<br><b>{"HIGH" if pred else "LOW"}</b></div>', unsafe_allow_html=True)
-    # GAUGE
-    fig = go.Figure(go.Indicator(
-    mode="gauge+number",
-    value=min(prob * 100, 95),   # ✅ correct
-    title={'text': "Cloudburst %"},
-    gauge={'axis': {'range': [0, 100]}}
-))
-
-    st.plotly_chart(fig, key=f"chart_{loc}")
-
-    # LANDSLIDE
-    if rain > 80:
-        st.error("🚨 HIGH LANDSLIDE RISK")
-    elif rain > 40:
-        st.warning("⚠ Moderate Risk")
-    else:
-        st.success("✅ Safe Travel")
-
-    # MAP (FIXED PYDECK)
-    map_df = pd.DataFrame({
-        "lat":[lat],
-        "lon":[lon]
-    })
-
-    st.pydeck_chart(pdk.Deck(
-        initial_view_state=pdk.ViewState(
-            latitude=lat,
-            longitude=lon,
-            zoom=8
-        ),
-        layers=[
-            pdk.Layer(
-                "ScatterplotLayer",
-                data=map_df,
-                get_position="[lon, lat]",
-                get_fill_color=[255,0,0],
-                get_radius=5000
-            )
-        ]
-    ))
-# TELEGRAM TIMER
+    # 7. TELEGRAM NOTIFICATIONS
     if "last_sent" not in st.session_state:
         st.session_state.last_sent = 0
- # Check cooldown (30 minutes = 1800 seconds)
-    if time.time() - st.session_state.last_sent > 1800:
 
-        # Define risk
-        if rain > 80:
-            risk = "HIGH"
-        elif rain > 40:
-            risk = "MODERATE"
-        else:
-            risk = "LOW"
-
-        # Send only risk
-        send_telegram(f"⚠ {loc} Cloudburst Risk: {risk}")
-
-        # Update last sent time
+    if (time.time() - st.session_state.last_sent > 1800) and rain > 40:
+        risk_lvl = "HIGH" if rain > 80 else "MODERATE"
+        send_telegram(f"⚠ ALERT: {loc} risk is {risk_lvl} ({rain}mm rain)")
         st.session_state.last_sent = time.time()
+
+# --- RESET INDENTATION FOR CHATBOT ---
+st.header("🤖 Local AI Assistant")
+# ... (rest of your chatbot code)
 # -----------------------------
 # CHATBOT
 # -----------------------------
