@@ -121,8 +121,7 @@ def get_weather(lat, lon):
 
         rain = 0
         if "hourly" in d and "precipitation" in d["hourly"]:
-            rain = max(d["hourly"]["precipitation"])
-
+          rain = sum(d["hourly"]["precipitation"][:3])
         return rain, temp, wind
 
     except Exception:
@@ -143,23 +142,20 @@ def predict(df):
 
     try:
         p = model.predict_proba(df)[0]
-
-        # Ensure proper probability extraction
-        if len(p) > 1:
-            prob = float(p[1])
-        else:
-            prob = float(p[0])
+        prob = float(p[1]) if len(p) > 1 else float(p[0])
 
     except:
-        # Better fallback (not always 100%)
         rain = df["rainfall"].iloc[0]
 
         if rain > 80:
-            prob = 0.85
+            prob = 0.8
         elif rain > 40:
-            prob = 0.55
+            prob = 0.5
         else:
-            prob = 0.25
+            prob = 0.2
+
+    # 🔥 smoothing clamp
+    prob = max(0.05, min(prob, 0.9))
 
     return pred, prob
 # -----------------------------
@@ -196,7 +192,7 @@ for loc in selected:
     # GAUGE
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
-        value=prob*100,
+        value = min(prob * 100, 95)
         title={'text':"Cloudburst %"},
         gauge={'axis':{'range':[0,100]}}
     ))
