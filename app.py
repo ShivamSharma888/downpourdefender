@@ -232,14 +232,6 @@ for loc in selected:
             pitch=45
         ),
         layers=[
-            # Layer 1: The Safety Path (Road Line)
-            pdk.Layer(
-                "PathLayer",
-                data=path_data,
-                get_path="path",
-                get_color="color",
-                width_min_pixels=5,
-            ),
             # Layer 2: Safety Zone Circle (Glowing effect)
             pdk.Layer(
                 "ScatterplotLayer",
