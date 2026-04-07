@@ -138,24 +138,32 @@ def get_weather(lat, lon):
 # PREDICTION SAFE
 # -----------------------------
 def predict(df):
+    rain = df["rainfall"].iloc[0]
+
     pred = model.predict(df)[0]
 
     try:
         p = model.predict_proba(df)[0]
         prob = float(p[1]) if len(p) > 1 else float(p[0])
-
     except:
-        rain = df["rainfall"].iloc[0]
+        prob = 0.0
 
-        if rain > 80:
-            prob = 0.8
-        elif rain > 40:
-            prob = 0.5
-        else:
-            prob = 0.2
+    # 🔥 HARD FIX (very important)
+    if rain == 0:
+        prob = 0.05
+        pred = 0
 
-    # 🔥 smoothing clamp
-    prob = max(0.05, min(prob, 0.9))
+    elif rain < 10:
+        prob = min(prob, 0.2)
+
+    elif rain < 40:
+        prob = min(prob, 0.5)
+
+    elif rain < 80:
+        prob = min(prob, 0.75)
+
+    else:
+        prob = min(prob, 0.9)
 
     return pred, prob
 # -----------------------------
