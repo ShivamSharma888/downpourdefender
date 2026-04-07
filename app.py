@@ -305,8 +305,7 @@ for loc in selected:
         else:
             st.error("❌ Telegram failed. Check Bot Token and Chat ID.")
 
-# --- RESET INDENTATION FOR CHATBOT ---
-st.header("🤖 Local AI Assistant")
+ 
 # ... (rest of your chatbot code)
 # -----------------------------
 # CHATBOT
