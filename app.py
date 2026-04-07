@@ -505,5 +505,28 @@ if prompt := st.chat_input("Ask anything..."):
 # -----------------------------
 # FOOTER
 # -----------------------------
-st.markdown("---")
-st.write("DEVELOPED BY ANSH THAKUR ,PIYUSH SHARMA and HEMANT KUMAR")
+st.markdown("""
+<style>
+.footer {
+    position: fixed;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 16px;
+    color: white;
+}
+
+.footer span {
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    padding: 10px 20px;
+    border-radius: 25px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.3);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+</style>
+
+<div class="footer">
+    <span>🚀 Developed by Ansh Thakur • Piyush Sharma • Hemant Kumar</span>
+</div>
+""", unsafe_allow_html=True)
