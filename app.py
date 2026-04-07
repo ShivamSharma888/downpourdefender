@@ -287,14 +287,23 @@ for loc in selected:
     else:
         st.success("✅ Safe Travel Conditions")
 
-    # 7. TELEGRAM NOTIFICATIONS
+  # 7. TELEGRAM NOTIFICATIONS (FIXED FOR TESTING)
     if "last_sent" not in st.session_state:
         st.session_state.last_sent = 0
 
-    if (time.time() - st.session_state.last_sent > 1800) and rain > 40:
-        risk_lvl = "HIGH" if rain > 80 else "MODERATE"
-        send_telegram(f"⚠ ALERT: {loc} risk is {risk_lvl} ({rain}mm rain)")
-        st.session_state.last_sent = time.time()
+    # Test Mode: This will send a notification if you haven't sent one in the last 10 seconds
+    if (time.time() - st.session_state.last_sent > 10): 
+        # Determine risk
+        risk_lvl = "HIGH" if rain > 80 else "MODERATE" if rain > 40 else "LOW"
+        
+        # Call the function
+        status = send_telegram(f"📢 *Downpour Defender Status*\n📍 Location: {loc}\n🌧 Rain: {rain}mm\n⚠ Risk Level: {risk_lvl}")
+        
+        if status:
+            st.toast(f"✅ Telegram Alert sent for {loc}!")
+            st.session_state.last_sent = time.time()
+        else:
+            st.error("❌ Telegram failed. Check Bot Token and Chat ID.")
 
 # --- RESET INDENTATION FOR CHATBOT ---
 st.header("🤖 Local AI Assistant")
