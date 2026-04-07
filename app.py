@@ -33,7 +33,7 @@ st.markdown("""
 # -----------------------------
 import requests
 
-TOKEN = "YOUR_NEW_TOKEN"
+TOKEN = "8754743480:AAFUdPETX7l431QNuWxZqMIoQGDR82ScxhQ"
 CHAT_ID = "-1003814185899"
 
 def send_telegram(msg):
