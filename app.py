@@ -188,38 +188,76 @@ for loc in selected:
     # 2. UI HEADER
     st.subheader(f"📍 {loc}")
 
-    # 3. ROUTE & RISK MAP (Dynamic path from location to Shimla)
-    start_coord = (lat, lon)
-    end_coord = (31.10, 77.17)  # Shimla
-    
-    route_coords = [
-        start_coord,
-        ((start_coord[0]+end_coord[0])/2, (start_coord[1]+end_coord[1])/2),
-        end_coord
-    ]
+    # 3. DYNAMIC RISK & SAFETY MAP
+    # -----------------------------
+    # Define the Color Logic based on real-time rain
+    def get_safety_color(r):
+        if r > 80:
+            return [255, 0, 0, 160]    # RED: High Danger
+        elif r > 40:
+            return [255, 165, 0, 160]  # YELLOW: Caution
+        else:
+            return [0, 255, 0, 160]    # GREEN: Safe to Travel
 
-    path_data = []
-    for i in range(len(route_coords)-1):
-        # We check weather for each segment
-        s_rain, _, _ = get_weather(route_coords[i][0], route_coords[i][1])
-        s_color = [255, 0, 0] if s_rain > 40 else [0, 200, 0] # Red if segment is rainy
-        
-        path_data.append({
-            "path": [route_coords[i][::-1], route_coords[i+1][::-1]], 
-            "color": s_color
-        })
+    # Prepare data for map markers
+    map_data = pd.DataFrame({
+        "lat": [lat],
+        "lon": [lon],
+        "name": [loc],
+        "rain": [rain],
+        "status": ["DANGER" if rain > 80 else "CAUTION" if rain > 40 else "SAFE"],
+        "color": [get_safety_color(rain)]
+    })
+
+    # Prepare Route Path (Location to Shimla)
+    start_coord = (lat, lon)
+    end_coord = (31.10, 77.17)
+    route_coords = [start_coord, end_coord]
+    
+    path_data = [{
+        "path": [start_coord[::-1], end_coord[::-1]],
+        "color": get_safety_color(rain)
+    }]
+
+    st.write(f"### 🗺️ Road Safety Status: {loc}")
 
     st.pydeck_chart(pdk.Deck(
-        initial_view_state=pdk.ViewState(latitude=lat, longitude=lon, zoom=9),
+        initial_view_state=pdk.ViewState(
+            latitude=lat, 
+            longitude=lon, 
+            zoom=10, 
+            pitch=45
+        ),
         layers=[
+            # Layer 1: The Safety Path (Road Line)
             pdk.Layer(
                 "PathLayer",
-                data=pd.DataFrame(path_data),
+                data=path_data,
                 get_path="path",
                 get_color="color",
                 width_min_pixels=5,
+            ),
+            # Layer 2: Safety Zone Circle (Glowing effect)
+            pdk.Layer(
+                "ScatterplotLayer",
+                data=map_data,
+                get_position="[lon, lat]",
+                get_fill_color="color",
+                get_radius=3000,
+                pickable=True
+            ),
+            # Layer 3: Safety Label
+            pdk.Layer(
+                "TextLayer",
+                data=map_data,
+                get_position="[lon, lat]",
+                get_text="status",
+                get_size=22,
+                get_color=[255, 255, 255],
+                get_alignment_baseline="'bottom'",
             )
-        ]
+        ],
+        tooltip={"text": "Location: {name}\nStatus: {status}\nRain: {rain}mm"}
     ))
 
     # 4. METRICS CARDS
