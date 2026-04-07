@@ -171,7 +171,6 @@ def predict(df):
 # -----------------------------
 st.title("🌧 Downpour Defender PRO MAX")
  # ... (Keep your existing CONFIG, STYLE, TELEGRAM, and MODEL sections)
-
 # -----------------------------
 # DASHBOARD & ROUTE FINDING
 # -----------------------------
@@ -198,14 +197,12 @@ for loc in selected:
         ((start_coord[0]+end_coord[0])/2, (start_coord[1]+end_coord[1])/2),
         end_coord
     ]
-
-    route_probs = []
+ route_probs = []
     for rlat, rlon in route_coords:
         r_rain, r_temp, r_wind = get_weather(rlat, rlon)
         r_df = pd.DataFrame({"rainfall":[r_rain], "temperature":[r_temp], "windspeed":[r_wind]})
         _, r_prob = predict(r_df)
         route_probs.append(r_prob)
-
     # Path data preparation
     path_data = []
     def risk_color(p):
@@ -218,9 +215,7 @@ for loc in selected:
             "path": [route_coords[i][::-1], route_coords[i+1][::-1]], # PyDeck uses [lon, lat]
             "color": risk_color(route_probs[i])
         })
-    
     df_path = pd.DataFrame(path_data)
-
     # UI Layout: Metrics
     c1, c2, c3, c4 = st.columns(4)
     c1.markdown(f'<div class="card">🌧 Rain<br><b>{rain:.1f} mm</b></div>', unsafe_allow_html=True)
