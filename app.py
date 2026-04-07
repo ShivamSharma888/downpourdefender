@@ -233,11 +233,10 @@ for loc in selected:
             )
         ]
     ))
-       # TELEGRAM TIMER
+# TELEGRAM TIMER
     if "last_sent" not in st.session_state:
         st.session_state.last_sent = 0
-
-    # Check cooldown (30 minutes = 1800 seconds)
+ # Check cooldown (30 minutes = 1800 seconds)
     if time.time() - st.session_state.last_sent > 1800:
 
         # Define risk
