@@ -191,11 +191,11 @@ for loc in selected:
 
     # GAUGE
     fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value = min(prob * 100, 95)
-        title={'text':"Cloudburst %"},
-        gauge={'axis':{'range':[0,100]}}
-    ))
+    mode="gauge+number",
+    value=min(prob * 100, 95),   # ✅ correct
+    title={'text': "Cloudburst %"},
+    gauge={'axis': {'range': [0, 100]}}
+))
 
     st.plotly_chart(fig, key=f"chart_{loc}")
 
