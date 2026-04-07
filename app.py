@@ -49,14 +49,17 @@ def send_telegram(msg):
 # -----------------------------
 # MODEL
 # -----------------------------
-class DummyModel:
+ class DummyModel:
     def predict(self, df):
         return [1 if df['rainfall'].iloc[0] > 80 else 0]
+
     def predict_proba(self, df):
         r = df['rainfall'].iloc[0]
-        p = min(r/120, 0.99)
-        return [[1-p, p]]
 
+        # smoother scaling (never stuck at 100)
+        p = max(0.05, min(r / 150, 0.9))
+
+        return [[1 - p, p]]
 try:
     model = pickle.load(open("cloudburst_model.pkl","rb"))
 except:
@@ -135,17 +138,30 @@ def get_weather(lat, lon):
 # -----------------------------
 # PREDICTION SAFE
 # -----------------------------
-def predict(df):
+ def predict(df):
     pred = model.predict(df)[0]
 
     try:
         p = model.predict_proba(df)[0]
-        prob = p[1] if len(p) > 1 else p[0]
+
+        # Ensure proper probability extraction
+        if len(p) > 1:
+            prob = float(p[1])
+        else:
+            prob = float(p[0])
+
     except:
-        prob = 1.0 if pred else 0.0
+        # Better fallback (not always 100%)
+        rain = df["rainfall"].iloc[0]
+
+        if rain > 80:
+            prob = 0.85
+        elif rain > 40:
+            prob = 0.55
+        else:
+            prob = 0.25
 
     return pred, prob
-
 # -----------------------------
 # HEADER
 # -----------------------------
