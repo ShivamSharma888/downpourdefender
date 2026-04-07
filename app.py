@@ -138,7 +138,7 @@ def get_weather(lat, lon):
 # -----------------------------
 # PREDICTION SAFE
 # -----------------------------
- def predict(df):
+def predict(df):
     pred = model.predict(df)[0]
 
     try:
