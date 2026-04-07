@@ -29,22 +29,25 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------
-# TELEGRAM
+# TELEGRAM (FIXED)
 # -----------------------------
-import requests
-
 TOKEN = "8754743480:AAFUdPETX7l431QNuWxZqMIoQGDR82ScxhQ"
 CHAT_ID = "-1003814185899"
 
 def send_telegram(msg):
     try:
-        requests.post(
-            f"https://api.telegram.org/bot8754743480:AAFUdPETX7l431QNuWxZqMIoQGDR82ScxhQ/sendMessage",
-            json={"chat_id": CHAT_ID, "text": msg},
-            timeout=5
-        )
-    except:
-        pass
+        # ✅ FIXED: Use the 'bot' prefix correctly with the TOKEN variable
+        url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+        payload = {
+            "chat_id": CHAT_ID, 
+            "text": msg,
+            "parse_mode": "Markdown" # Allows bold/italics in Telegram
+        }
+        response = requests.post(url, json=payload, timeout=5)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"Telegram Error: {e}")
+        return False
 
 # -----------------------------
 # MODEL
